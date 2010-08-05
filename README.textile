@@ -85,7 +85,7 @@ h3. Work it
 	*/
 	$config["migrations_version"] = 6;
  
-Usage:
+h3. Doooowittt
 	The code is all based out of a library so you can call it anywhere with.
 	
 	$this->load->library('migrate');
@@ -96,13 +96,13 @@ Usage:
 	The dbmigreate.php controller just shows the use of these functions. If you are going to use it.
 	remove the 'die();' and put it back in place when you are done.
 
-	<strikethrough>** THE KICKER **
+	--** THE KICKER **
 	At the bottom of migreate.php we assume you are keeping track of your versions with a db table called config. Yes
 	you can not use this migration script to create that table. You need at least one table installed to boot strap this.
 	You will want to review the _update_schema_version() function to either modify or copy how it works.
 
 	Also, in our applcations we have this code to set our applcation configs. We do not believe in writting to the file system
-	that is what a database is for :).
+	that is what a database is for :).--
 
 	//
 	// Setup Config.
@@ -114,10 +114,10 @@ Usage:
 			$this->config->set_item($row->Config_Name, $row->Config_Data);
 	}
 
-	In this code we set. $this->CI->config->item('migrationversion'); and that is how _get_schema_version() 
-	gets the current version. This is the version this database is set too.</strikethrough>
+	--In this code we set. $this->CI->config->item('migrationversion'); and that is how _get_schema_version() 
+	gets the current version. This is the version this database is set too.--
 	
-	All the above stuff is bullocks in this fork. This guy creates a schema_version table for you an stuffs 0 in it to begin with.
+	*All the above stuff is bullocks in this fork. This guy creates a schema_version table for you an stuffs 0 in it to begin with.*
 
 	** Suggestion **
 	We also do this on login to make sure this database is migrated to the version the config files wants it to be migrated too.
