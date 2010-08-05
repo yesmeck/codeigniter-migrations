@@ -34,19 +34,31 @@ class Migrate
 	function Migrate() 
 	{
 		$this->CI =& get_instance();
-			
+		
+		$this->CI->config->load('migrate');
+		
 		if(! $this->CI->config->item('migrations_enabled')) 
 			show_404();
 		if(! $this->CI->config->item('migrations_path'))
 			show_404();
-			
-		$this->CI->lang->load("migrations");
+
 		$this->migrations_path = $this->CI->config->item('migrations_path');
 
 		if($this->migrations_path != '' && substr($this->migrations_path, -1) != '/')
 			$this->migrations_path .= '/';
 		
 		$this->CI->load->dbforge();
+		
+
+		if(! $this->CI->db->table_exists('schema_version')) {
+			$cols = array(
+				'version' => array('type' => 'INT', 'constraint' => 3),
+				);
+			$this->CI->dbforge->add_field($cols);
+			$this->CI->dbforge->create_table('schema_version', TRUE);
+			
+			$this->CI->db->insert('schema_version', array('version' => 0));
+		}
 	}
 
 	//
@@ -232,7 +244,10 @@ class Migrate
 	 */
 	function _get_schema_version() 
 	{
-		return $this->CI->config->item('migrationversion');
+		$query = $this->CI->db->get('schema_version');
+		$row = $query->row();
+
+		return $row->version;
 	}
 
 	// --------------------------------------------------------------------
@@ -245,13 +260,9 @@ class Migrate
 	 * @return	void					Outputs a report of the migration
 	 */
 	function _update_schema_version($schema_version) 
-	{
-		$data = array('Config_Data' => $schema_version, 'Config_Last_Update' => date("Y-m-d g:i:s"));
-		$this->CI->db->where('Config_Name', 'migrationversion');
-		$this->CI->db->update('config', $data); 		
+	{				
+		$data = array('version' => $schema_version);
+		$this->CI->db->update('schema_version', $data);
 		return 1;
 	}
-
 }
-
-?>

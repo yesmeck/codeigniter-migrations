@@ -7,6 +7,7 @@ class Dbmigrate extends Controller {
 	{
 		parent::Controller();	
 		$this->load->library('migrate');
+		$this->config->load('migrate');
 		$this->migrate->setverbose(TRUE);
 		
 		/**
