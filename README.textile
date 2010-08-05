@@ -1,3 +1,10 @@
+h1. Codeignit*o*r-Migrations (with an o yo)
+
+h2. Authors
+Forked By:
+	webPragmatist <chris@webPragmatist.com>
+	http://www.webPragmatist.com/
+
 By: 
 	Spicer Matthews <spicer@cloudmanic.com>
 	Cloudmanic Labs, LLC
@@ -6,8 +13,9 @@ By:
 Based On:
 	http://codeigniter.com/wiki/Migrations/
 	By: Mat'as Montes
+	
+h3. Descriptions
 
-Description: 
 	An open source utility for Codeigniter inspired by Ruby on Rails.
 
 	The one thing Ruby on Rails has that Codeigniter does not have built in
@@ -19,7 +27,8 @@ Description:
 	are powerful and work in nearly the same way. Maybe someday we can create a joint project 
 	with Mat'as or even better get this into that core of Codeigniter.
 
-Install:
+h4. Installation
+
 	Copy the files to these locations.
 	
 	migrate.php -> application/libraries/
@@ -28,7 +37,8 @@ Install:
 	The migration files included in this are just examples. You should install them where ever you 
 	point your $config["migrations_path"] to.
 	
-	Add these config to your config.php
+	Add these config to your -config.php- migration.php
+	
 
 	/*
 	|--------------------------------------------------------------------------
@@ -85,10 +95,10 @@ Usage:
 	The dbmigreate.php controller just shows the use of these functions. If you are going to use it.
 	remove the 'die();' and put it back in place when you are done.
 
-	** THE KICKER **
+	-** THE KICKER **
 	At the bottom of migreate.php we assume you are keeping track of your versions with a db table called config. Yes
 	you can not use this migration script to create that table. You need at least one table installed to boot strap this.
-	You will want to review the _update_schema_version() function to either modify or copy how it works. 
+	You will want to review the _update_schema_version() function to either modify or copy how it works.
 
 	Also, in our applcations we have this code to set our applcation configs. We do not believe in writting to the file system
 	that is what a database is for :).
@@ -104,7 +114,9 @@ Usage:
 	}
 
 	In this code we set. $this->CI->config->item('migrationversion'); and that is how _get_schema_version() 
-	gets the current version. This is the version this database is set too.
+	gets the current version. This is the version this database is set too.-
+	
+	All the above stuff is bullocks in this fork. This guy creates a schema_version table for you an stuffs 0 in it to begin with.
 
 	** Suggestion **
 	We also do this on login to make sure this database is migrated to the version the config files wants it to be migrated too.
@@ -128,4 +140,3 @@ When you auto load the system.php lib this should be your order: $autoload['libr
 Here is a video walk through of migrations in action. 
 
 http://www.vimeo.com/13490644
-	
