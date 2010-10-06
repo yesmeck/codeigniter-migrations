@@ -135,7 +135,7 @@ class Migrations {
 			// Calculate the last migration step from existing migration
 			// filenames and procceed to the standard version migration
 			$last_version =	substr($last_migration,0,3);
-			return $this->update(intval($last_version,10));
+			return $this->version(intval($last_version,10));
 		} else {
 			$this->error = $this->_ci->lang->line('no_migrations_found');
 			return 0;
@@ -152,13 +152,10 @@ class Migrations {
 	 *
 	 * @access	public
 	 * @param $version integer	Target schema version
-	 * @return	void			Outputs a report of the migration
+	 * @return	mixed	TRUE if already latest, FALSE if failed, int if upgraded
 	 */
-	function update($version = NULL) 
-	{
-		// If no number provided, use the config number
-		$version OR $version = $this->_ci->config->item('migrations_version');
-		
+	function version($version) 
+	{	
 		$schema_version = $this->_get_schema_version();
 		$start = $schema_version;
 		$stop = $version;
@@ -249,54 +246,67 @@ class Migrations {
 
 		$version = $i + ($step == 1 ? -1 : 0);
 
-		// If there is any migration to proccess
-		if (count($migrations)) 
-		{ 
-			if ($this->verbose)
-			{
-				echo "<p>Current schema version: ".$schema_version."<br/>";
-				echo "Moving ".$method." to version ".$version."</p>";
-				echo "<hr/>";
-			}
-			
-			// Loop Through the migrations
-			foreach($migrations AS $m) 
-			{
-				if ($this->verbose)
-				{
-					echo "$m:<br />";
-					echo "<blockquote>";
-				}
-				
-				$class = 'Migration_'.ucfirst($m);
-				call_user_func(array(new $class, $method));
-				
-				if ($this->verbose)
-				{
-					echo "</blockquote>";
-					echo "<hr/>";
-				}
-				
-				
-				$schema_version += $step;
-				$this->_update_schema_version($schema_version);
-			}
-
-			if ($this->verbose)
-			{
-				echo "<p>All done. Schema is at version $schema_version.</p>";
-			}
-		} 
-		
-		else
+		// If there is nothing to do, bitch and quit
+		if ($migrations === array()) 
 		{
 			if ($this->verbose)
 			{
 				echo "Nothing to do, bye!\n";
 			}
+		
+			return TRUE;
 		}
 		
-		return TRUE;
+		if ($this->verbose)
+		{
+			echo "<p>Current schema version: ".$schema_version."<br/>";
+			echo "Moving ".$method." to version ".$version."</p>";
+			echo "<hr/>";
+		}
+		
+		// Loop through the migrations
+		foreach($migrations AS $m) 
+		{
+			if ($this->verbose)
+			{
+				echo "$m:<br />";
+				echo "<blockquote>";
+			}
+			
+			$class = 'Migration_'.ucfirst($m);
+			call_user_func(array(new $class, $method));
+			
+			if ($this->verbose)
+			{
+				echo "</blockquote>";
+				echo "<hr/>";
+			}
+			
+			
+			$schema_version += $step;
+			$this->_update_schema_version($schema_version);
+		}
+
+		if ($this->verbose)
+		{
+			echo "<p>All done. Schema is at version $schema_version.</p>";
+		}
+		
+		return $schema_version;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Set's the schema to the latest migration
+	 *
+	 * @access	public
+	 * @return	mixed	TRUE if already latest, FALSE if failed, int if upgraded
+	 */
+	public function latest()
+	{
+		$version = $this->_ci->config->item('migrations_version');
+		return $this->version($version);
 	}
 
 	// --------------------------------------------------------------------
