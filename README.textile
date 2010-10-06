@@ -33,51 +33,42 @@ h3. Install
 
 	Copy the files to these locations.
 	
-	config/migration.php -> application/config/
-	libraries/Migration.php -> application/libraries/
-	controllers/dbmigrate.php -> applcation/controllers/
+	config/migrations.php -> application/config/
+	libraries/Migrations.php -> application/libraries/
+	controllers/migrate.php -> applcation/controllers/
 
 	The migration files included in this are just examples. You should install them where ever you 
 	point your $config["migrations_path"] to.
  
 h3. Usage
 	
-	$this->load->library('migrate');
-	$this->migration->set_verbose(TRUE); // echo statments or not
-	$this->migration->version(id); // migrate the database to a particular version
-	$this->migration->install(); // install to the latest version.
+	$this->load->library('migrations');
+	$this->migrations->set_verbose(TRUE); // echo statments or not
+	$this->migrations->version(id); // migrate the database to a particular version
+	$this->migrations->install(); // install to the latest version.
 
-	The dbmigreate.php controller just shows the use of these functions. If you are going to use it.
-	remove the 'die();' and put it back in place when you are done.
-
-	-** THE KICKER **-
-	-At the bottom of migreate.php we assume you are keeping track of your versions with a db table called config. Yes you can not use this migration script to create that table. You need at least one table installed to boot strap this. You will want to review the _update_schema_version() function to either modify or copy how it works.-
-
-	-Also, in our applcations we have this code to set our applcation configs. We do not believe in writting to the file system that is what a database is for :).-
-
+	The migreate.php controller just shows the use of these functions. If you are going to use it.
+	comment out the show_error() in the construct, and put it back in place when you are done.
+	
 	-System configury code gone-
 	
-	-In this code we set. $this->CI->config->item('migration_version'); and that is how _get_schema_version() 
+	-In this code we set. $this->config->item('migration_version'); and that is how _get_schema_version() 
 	gets the current version. This is the version this database is set too.-
 
-	** Suggestion **
-	We also do this on login to make sure this database is migrated to the version the config files wants it to be migrated too.
-	
 	// Make sure our database is up-to-date
-	$this->migration->set_verbose(FALSE);
-	if(! $this->migration->version($this->config->item('migrations_version')))
+	if ( ! $this->migration->version($this->config->item('migrations_version')))
+	{
 		show_error($this->migration->error);
-
+	}
 
 	Over all you should read this and http://codeigniter.com/wiki/Migrations to get an over all feel for this and make any changes 
 	you need for your applcation.
-	
 
 Other Helpful Stuff:
 
-Included in this git repo is an example system.php file. A way to have migrations run on every page load. You can copy it directly or use it as an example for your own code structure. 
-
-When you auto load the system.php lib this should be your order: $autoload['libraries'] = array('database', 'migrate', 'system', 'session');
+Included in this git repo is an example CodeIgniter Hook and a basic config/hooks.php to show
+how to enable it. This hook is one of several ways to have migrations run on every page load. You
+could also place the code into a MY_Controller.
 
 Here is a video walk through of migrations in action. 
 
