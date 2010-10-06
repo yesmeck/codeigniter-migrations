@@ -37,20 +37,29 @@ class Migrations
 		$this->CI =& get_instance();
 		
 		$this->CI->config->load('migrations');
-		
-		if(! $this->CI->config->item('migrations_enabled')) 
-			show_404();
-		if(! $this->CI->config->item('migrations_path'))
-			show_404();
 
+		$this->migrations_enabled = $this->CI->config->item('migrations_enabled');
 		$this->migrations_path = $this->CI->config->item('migrations_path');
 
-		if($this->migrations_path != '' && substr($this->migrations_path, -1) != '/')
+		// Idiot check
+		$this->migrations_enabled AND $this->migrations_path OR show_error('Migrations has been loaded but is disabled or set up incorrectly.');
+
+		// If not set, set it
+		if ($this->migrations_path == '')
+		{
+			$this->migrations_path = APPPATH . 'migrations/';
+		}
+		
+		// Add trailing slash if not set
+		else if (substr($this->migrations_path, -1) != '/')
+		{
 			$this->migrations_path .= '/';
+		}
 		
 		$this->CI->load->dbforge();	
 
-		if(! $this->CI->db->table_exists('schema_version'))
+		// If the schema_version table is missing, make it
+		if ( ! $this->CI->db->table_exists('schema_version'))
 		{
 			$this->CI->dbforge->add_field(array(
 				'version' => array('type' => 'INT', 'constraint' => 3),
@@ -63,7 +72,7 @@ class Migrations
 	}
 
 	// This will set if there should be verbose output or not
-	function set_verbose($state)
+	public function set_verbose($state)
 	{
 		$this->verbose = $state;
 	}
@@ -74,9 +83,10 @@ class Migrations
 	* @access	public
 	* @return	void	Outputs a report of the installation
 	*/
-	function install() 
+	public function install() 
 	{
-		$files = glob($this->migrations_path.'*'.EXT);
+		// Load all *_*.php files in the migrations path
+		$files = glob($this->migrations_path.'*_*'.EXT);
 		$file_count = count($files);
 
 		for($i=0; $i < $file_count; $i++) 
@@ -88,7 +98,7 @@ class Migrations
 
 		$migrations = array_filter($files);
 
-		if ( !  empty($migrations))
+		if ( ! empty($migrations))
 		{
 			sort($migrations);
 			$last_migration = basename(end($migrations));
@@ -246,7 +256,7 @@ class Migrations
 	 * @access	private
 	 * @return	integer	Current Schema version
 	 */
-	function _get_schema_version() 
+	private function _get_schema_version() 
 	{
 		$row = $this->CI->db->get('schema_version')->row();
 
@@ -262,7 +272,7 @@ class Migrations
 	 * @param $schema_version integer	Schema version reached
 	 * @return	void					Outputs a report of the migration
 	 */
-	function _update_schema_version($schema_version) 
+	private function _update_schema_version($schema_version) 
 	{
 		return $this->CI->db->update('schema_version', array('version' => $schema_version));
 	}

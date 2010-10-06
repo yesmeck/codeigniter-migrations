@@ -41,4 +41,4 @@ $config['migrations_path'] = APPPATH . 'migrations/';
 | $this->migration->version($this->config->item('migrations_version'));
 |
 */
-$config['migrations_version'] = 6;
+$config['migrations_version'] = 0;
