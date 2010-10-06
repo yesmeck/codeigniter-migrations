@@ -1,39 +1,34 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
-class Create_accounts {
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Migration_Create_accounts extends	Migration {
+	
 	function up() 
-	{
-		$CI =& get_instance();
-		if($CI->migrate->verbose)
-			echo "Creating table accounts...";
+	{	
+		$this->migrations->verbose AND print "Creating table accounts...";
 		
-		if(! $CI->db->table_exists('accounts')) {
-			$cols = array(
-				'Id' => array('type' => 'INT', 'constraint' => 5, 'unsigned' => TRUE, 'auto_increment' => TRUE),
-				'Company_Name' => array('type' => 'VARCHAR', 'constraint' => '200', 'null' => FALSE),
-				'First_Name' => array('type' => 'VARCHAR', 'constraint' => '200', 'null' => FALSE),
-				'Last_Name' => array('type' => 'VARCHAR', 'constraint' => '200', 'null' => FALSE),
-				'Phone' => array('type' => 'TEXT', 'null' => FALSE),
-				'Email' => array('type' => 'TEXT', 'null' => FALSE),
-				'Websites' => array('type' => 'TEXT', 'null' => FALSE),
-				'Address' => array('type' => 'TEXT', 'null' => FALSE),
-				'Last_Update' => array('type' => 'DATETIME', 'null' => FALSE)
-			);
-			
+		if ( ! $this->db->table_exists('accounts'))
+		{	
 			// Setup Keys
-			$CI->dbforge->add_key('Id', TRUE);
-			$CI->dbforge->add_field($cols);
-			$CI->dbforge->add_field("Created_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP");
-			$CI->dbforge->create_table('accounts', TRUE);
+			$this->dbforge->add_key('id', TRUE);
+			
+			$this->dbforge->add_field(array(
+				'id' => array('type' => 'INT', 'constraint' => 5, 'unsigned' => TRUE, 'auto_increment' => TRUE),
+				'company_name' => array('type' => 'VARCHAR', 'constraint' => '200', 'null' => FALSE),
+				'first_name' => array('type' => 'VARCHAR', 'constraint' => '200', 'null' => FALSE),
+				'last_name' => array('type' => 'VARCHAR', 'constraint' => '200', 'null' => FALSE),
+				'phone' => array('type' => 'TEXT', 'null' => FALSE),
+				'email' => array('type' => 'TEXT', 'null' => FALSE),
+				'address' => array('type' => 'TEXT', 'null' => FALSE),
+				'Last_Update' => array('type' => 'DATETIME', 'null' => FALSE)
+			));
+			
+			$this->dbforge->add_field("Created_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP");
+			$this->dbforge->create_table('accounts', TRUE);
 		}
 	}
 
 	function down() 
 	{
-		$CI =& get_instance();
-		if($CI->migrate->verbose)
-			echo "Dropping table accounts...";
-		$CI->dbforge->drop_table('accounts');
+		$this->dbforge->drop_table('accounts');
 	}
 }
-
-?>

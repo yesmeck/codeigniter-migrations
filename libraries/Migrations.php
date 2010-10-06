@@ -7,12 +7,41 @@
  * @package		Migrations
  * @author		Mat’as Montes
  *
- * Rewritten into a lib By: 
+ * Rewritten by: 
+ * 
+ * 	Phil Sturgeon
+ *	http://philsturgeon.co.uk/
+ * 
+ * and
+ * 
  * 	Spicer Matthews <spicer@cloudmanic.com>
  * 	Cloudmanic Labs, LLC
- *	http://www.cloudmanic.com
+ *	http://www.cloudmanic.com/
  *
  */
+
+// ------------------------------------------------------------------------
+
+/**
+ * Migration Interface
+ *
+ * All migrations should implement this, forces up() and down() and gives 
+ * access to the CI super-global.
+ *
+ * @package		Migrations
+ * @author		Phil Sturgeon
+ */
+
+abstract class Migration {
+	
+	public abstract function up();
+	public abstract function down();
+	
+	function __get($var)
+	{
+		return CI_Base::get_instance()->$var;
+	}
+}
 
 // ------------------------------------------------------------------------
 
@@ -24,8 +53,8 @@
  * @package		Migrations
  * @author		Mat’as Montes
  */
-class Migrations 
-{
+class Migrations {
+	
 	private $migrations_enabled = FALSE;
 	private $migrations_path = ".";
 	private $verbose = FALSE;
@@ -34,12 +63,12 @@ class Migrations
 	
 	function __construct() 
 	{
-		$this->CI =& get_instance();
+		$this->_ci =& get_instance();
 		
-		$this->CI->config->load('migrations');
+		$this->_ci->config->load('migrations');
 
-		$this->migrations_enabled = $this->CI->config->item('migrations_enabled');
-		$this->migrations_path = $this->CI->config->item('migrations_path');
+		$this->migrations_enabled = $this->_ci->config->item('migrations_enabled');
+		$this->migrations_path = $this->_ci->config->item('migrations_path');
 
 		// Idiot check
 		$this->migrations_enabled AND $this->migrations_path OR show_error('Migrations has been loaded but is disabled or set up incorrectly.');
@@ -56,18 +85,18 @@ class Migrations
 			$this->migrations_path .= '/';
 		}
 		
-		$this->CI->load->dbforge();	
+		$this->_ci->load->dbforge();	
 
 		// If the schema_version table is missing, make it
-		if ( ! $this->CI->db->table_exists('schema_version'))
+		if ( ! $this->_ci->db->table_exists('schema_version'))
 		{
-			$this->CI->dbforge->add_field(array(
+			$this->_ci->dbforge->add_field(array(
 				'version' => array('type' => 'INT', 'constraint' => 3),
 			));
 			
-			$this->CI->dbforge->create_table('schema_version', TRUE);
+			$this->_ci->dbforge->create_table('schema_version', TRUE);
 			
-			$this->CI->db->insert('schema_version', array('version' => 0));
+			$this->_ci->db->insert('schema_version', array('version' => 0));
 		}
 	}
 
@@ -106,9 +135,9 @@ class Migrations
 			// Calculate the last migration step from existing migration
 			// filenames and procceed to the standard version migration
 			$last_version =	substr($last_migration,0,3);
-			return $this->version(intval($last_version,10));
+			return $this->update(intval($last_version,10));
 		} else {
-			$this->error = $this->CI->lang->line('no_migrations_found');
+			$this->error = $this->_ci->lang->line('no_migrations_found');
 			return 0;
 		}
 	}
@@ -125,8 +154,11 @@ class Migrations
 	 * @param $version integer	Target schema version
 	 * @return	void			Outputs a report of the migration
 	 */
-	function version($version = 0) 
+	function update($version = NULL) 
 	{
+		// If no number provided, use the config number
+		$version OR $version = $this->_ci->config->item('migrations_version');
+		
 		$schema_version = $this->_get_schema_version();
 		$start = $schema_version;
 		$stop = $version;
@@ -156,13 +188,15 @@ class Migrations
 			$f = glob(sprintf($this->migrations_path . '%03d_*'.EXT, $i));
 			
 			// Only one migration per step is permitted
-			if (count($f) > 1) { 
-				$this->error = sprintf($this->CI->lang->line("multiple_migrations_version"),$i);
+			if (count($f) > 1)
+			{ 
+				$this->error = sprintf($this->_ci->lang->line("multiple_migrations_version"),$i);
 				return 0;
 			}
 			
 			// Migration step not found
-			if (count($f) == 0) { 
+			if (count($f) == 0)
+			{ 
 				// If trying to migrate up to a version greater than the last
 				// existing one, migrate to the last one.
 				if ($step == 1) 
@@ -170,7 +204,7 @@ class Migrations
 
 				// If trying to migrate down but we're missing a step,
 				// something must definitely be wrong.
-				$this->error = sprintf($this->CI->lang->line("migration_not_found"),$i);
+				$this->error = sprintf($this->_ci->lang->line("migration_not_found"),$i);
 				return 0;
 			}
 
@@ -178,31 +212,37 @@ class Migrations
 			$name = basename($f[0],EXT);
 
 			// Filename validations
-			if (preg_match('/^\d{3}_(\w+)$/', $name, $match)) {
+			if (preg_match('/^\d{3}_(\w+)$/', $name, $match))
+			{
 				$match[1] = strtolower($match[1]);
 				
 				// Cannot repeat a migration at different steps
-				if (in_array($match[1], $migrations)) {
-					$this->error = sprintf($this->CI->lang->line("multiple_migrations_name"),$match[1]);
+				if (in_array($match[1], $migrations))
+				{
+					$this->error = sprintf($this->_ci->lang->line("multiple_migrations_name"),$match[1]);
 					return 0;
 				}
 				
 				include $f[0];
-				$class = ucfirst($match[1]);
+				$class = 'Migration_'.ucfirst($match[1]);
 
-				if ( ! class_exists($class)) {
-					$this->error = sprintf($this->CI->lang->line("migration_class_doesnt_exist"),$class);
+				if ( ! class_exists($class))
+				{
+					$this->error = sprintf($this->_ci->lang->line("migration_class_doesnt_exist"),$class);
 					return 0;
 				}
 				
 				if ( ! is_callable(array($class,"up")) || ! is_callable(array($class,"down"))) {
-					$this->error = sprintf($this->CI->lang->line('wrong_migration_interface'),$class);
+					$this->error = sprintf($this->_ci->lang->line('wrong_migration_interface'),$class);
 					return 0;
 				}
 
 				$migrations[] = $match[1];
-			} else { 
-				$this->error = sprintf($this->CI->lang->line("invalid_migration_filename"),$file);
+			} 
+			
+			else
+			{ 
+				$this->error = sprintf($this->_ci->lang->line("invalid_migration_filename"),$file);
 				return 0;
 			}
 		}
@@ -210,8 +250,10 @@ class Migrations
 		$version = $i + ($step == 1 ? -1 : 0);
 
 		// If there is any migration to proccess
-		if (count($migrations)) { 
-			if ($this->verbose) {
+		if (count($migrations)) 
+		{ 
+			if ($this->verbose)
+			{
 				echo "<p>Current schema version: ".$schema_version."<br/>";
 				echo "Moving ".$method." to version ".$version."</p>";
 				echo "<hr/>";
@@ -220,15 +262,17 @@ class Migrations
 			// Loop Through the migrations
 			foreach($migrations AS $m) 
 			{
-				if ($this->verbose) {
+				if ($this->verbose)
+				{
 					echo "$m:<br />";
 					echo "<blockquote>";
 				}
 				
-				$class = ucfirst($m);
-				call_user_func(array($class, $method));
+				$class = 'Migration_'.ucfirst($m);
+				call_user_func(array(new $class, $method));
 				
-				if ($this->verbose) {
+				if ($this->verbose)
+				{
 					echo "</blockquote>";
 					echo "<hr/>";
 				}
@@ -238,14 +282,21 @@ class Migrations
 				$this->_update_schema_version($schema_version);
 			}
 
-			if ($this->verbose) 
-				echo "<p>All done. Schema is at version $schema_version.</p>";
-
-		} else 
 			if ($this->verbose)
-				echo "Nothing to do, bye!\n";
+			{
+				echo "<p>All done. Schema is at version $schema_version.</p>";
+			}
+		} 
 		
-		return 1;
+		else
+		{
+			if ($this->verbose)
+			{
+				echo "Nothing to do, bye!\n";
+			}
+		}
+		
+		return TRUE;
 	}
 
 	// --------------------------------------------------------------------
@@ -258,7 +309,7 @@ class Migrations
 	 */
 	private function _get_schema_version() 
 	{
-		$row = $this->CI->db->get('schema_version')->row();
+		$row = $this->_ci->db->get('schema_version')->row();
 
 		return $row ? $row->version : 0;
 	}
@@ -274,6 +325,8 @@ class Migrations
 	 */
 	private function _update_schema_version($schema_version) 
 	{
-		return $this->CI->db->update('schema_version', array('version' => $schema_version));
+		return $this->_ci->db->update('schema_version', array(
+			'version' => $schema_version
+		));
 	}
 }
