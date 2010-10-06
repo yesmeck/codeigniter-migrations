@@ -29,7 +29,7 @@ h3. About
 	are powerful and work in nearly the same way. Maybe someday we can create a joint project 
 	with Mat'as or even better get this into that core of Codeigniter.
 
-h3. Work it
+h3. Install
 
 	Copy the files to these locations.
 	
@@ -40,8 +40,7 @@ h3. Work it
 	The migration files included in this are just examples. You should install them where ever you 
 	point your $config["migrations_path"] to.
  
-h3. Doooowittt
-	The code is all based out of a library so you can call it anywhere with.
+h3. Usage
 	
 	$this->load->library('migrate');
 	$this->migration->set_verbose(TRUE); // echo statments or not
