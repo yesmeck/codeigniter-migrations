@@ -5,7 +5,7 @@
  * An open source utility for CodeIgniter inspired by Ruby on Rails
  *
  * @package		Migrations
- * @author		Mat’as Montes
+ * @author		Matï¿½as Montes
  *
  * Rewritten by: 
  * 
@@ -39,7 +39,8 @@ abstract class Migration {
 	
 	function __get($var)
 	{
-		return CI_Base::get_instance()->$var;
+		$CI =& get_instance();
+		return $CI->$var;
 	}
 }
 
@@ -51,7 +52,7 @@ abstract class Migration {
  * Utility main controller.
  *
  * @package		Migrations
- * @author		Mat’as Montes
+ * @author		Matï¿½as Montes
  */
 class Migrations {
 	
@@ -104,6 +105,10 @@ class Migrations {
 	public function set_verbose($state)
 	{
 		$this->verbose = $state;
+	}
+	
+	public function get_verbose() {
+		return $this->verbose;
 	}
 
 	/**
